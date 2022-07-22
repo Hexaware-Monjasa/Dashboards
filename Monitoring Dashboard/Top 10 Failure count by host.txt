@@ -1,0 +1,4 @@
+SecurityEvent
+| where EventID == 4625
+| summarize count () by Computer
+| top 10 by count_

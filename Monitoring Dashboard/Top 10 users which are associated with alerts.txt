@@ -1,0 +1,9 @@
+SecurityAlert
+| extend AlertEntities = parse_json(Entities)
+| mv-expand AlertEntities
+| parse AlertEntities with * "Name" Nameuser: string 
+    "," * 
+| summarize count() by Nameuser
+| where isnotempty(Nameuser)
+| top 10 by count_
+| render barchart 
