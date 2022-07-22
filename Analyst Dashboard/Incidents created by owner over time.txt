@@ -1,0 +1,11 @@
+SecurityIncident
+| where CreatedTime >= ago(7d) and CreatedTime <= now()
+| summarize arg_max(TimeGenerated, Status, Severity, Owner, AdditionalData) by IncidentNumber
+| where Severity in ('*') or "*" in ('*')
+| extend Tactics = todynamic(AdditionalData.tactics)
+| where Tactics in ('*') or "*" in ('*')
+| extend Owner = todynamic(Owner.assignedTo) 
+| where Owner in ('*') or "*" in ('*')
+| extend Product = todynamic((parse_json(tostring(AdditionalData.alertProductNames))[0])) 
+| where Product in ('*') or "*" in ('*')
+| summarize count() by case(tostring(Owner) == "", "Unassigned", tostring(Owner))

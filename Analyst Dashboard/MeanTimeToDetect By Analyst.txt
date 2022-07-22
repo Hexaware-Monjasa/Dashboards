@@ -1,0 +1,13 @@
+SecurityIncident
+| where CreatedTime >= ago(30d) and CreatedTime <= now()
+| where Severity in ('*') or "*" in ('*')
+| extend Tactics = todynamic(AdditionalData.tactics)
+| where Tactics in ('*') or "*" in ('*')
+| extend Owner = todynamic(Owner.assignedTo) 
+| where Owner in ('*') or "*" in ('*')
+| extend Product = todynamic((parse_json(tostring(AdditionalData.alertProductNames))[0])) 
+| where Product in ('*') or "*" in ('*')
+| summarize arg_max(FirstModifiedTime, *) by IncidentNumber 
+| extend TimeToTriage =  FirstModifiedTime - CreatedTime
+| extend MinToTriage = TimeToTriage / 1h
+| summarize avg(TimeToTriage / 1h) by owner=case(tostring(Owner) == "", "Unassigned", tostring(Owner))

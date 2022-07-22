@@ -1,0 +1,20 @@
+SecurityIncident
+| where Severity in ('*') or "*" in ('*')
+| extend Tactics = todynamic(AdditionalData.tactics)
+| where Tactics in ('*') or "*" in ('*')
+| extend Owner = todynamic(Owner.assignedTo) 
+| where Owner in ('*') or "*" in ('*')
+| extend Product = todynamic((parse_json(tostring(AdditionalData.alertProductNames))[0])) 
+| where Product in ('*') or "*" in ('*')
+| order by LastModifiedTime 
+| project
+    LastModifiedTime,
+    IncidentNumber,
+    Title,
+    Product,
+    IncidentUrl,
+    ModifiedBy,
+    Status,
+    Severity,
+    Owner
+| take 250

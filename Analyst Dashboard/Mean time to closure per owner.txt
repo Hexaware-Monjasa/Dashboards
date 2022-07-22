@@ -1,0 +1,14 @@
+SecurityIncident
+| where CreatedTime >= datetime("2022-05-23T12:00:00.000Z") and CreatedTime <= datetime("2022-06-22T11:00:00.000Z")
+| where Severity in ('*') or "*" in ('*')
+| extend Tactics = todynamic(AdditionalData.tactics)
+| where Tactics in ('*') or "*" in ('*')
+| extend Owner = todynamic(Owner.assignedTo) 
+| where Owner in ('*') or "*" in ('*')
+| extend Product = todynamic((parse_json(tostring(AdditionalData.alertProductNames))[0])) 
+| where Product in ('*') or "*" in ('*')
+| where Status == 'Closed'  
+| extend Ownerr = case(tostring(Owner) == "", "Unassigned", tostring(Owner))
+| summarize arg_min(LastModifiedTime, *) by IncidentNumber, Owner = Ownerr
+| extend TimeToTriage = LastModifiedTime - CreatedTime, Owner
+| summarize avg(TimeToTriage / 1h) by Owner
