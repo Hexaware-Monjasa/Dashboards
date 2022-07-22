@@ -1,0 +1,5 @@
+SecurityIncident
+| where Severity !contains "Informational"
+| summarize arg_max(TimeGenerated,*) by IncidentNumber
+| summarize count() by Title
+| top 10  by count_

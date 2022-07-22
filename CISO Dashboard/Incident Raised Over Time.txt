@@ -1,0 +1,32 @@
+SecurityIncident
+| where Severity !contains "Informational"
+| summarize arg_max(TimeGenerated, *) by IncidentNumber
+| extend Comments = parse_json(Comments)
+| mv-expand Comments
+| extend Comment = parse_json(Comments.message)
+| project
+    TimeGenerated,
+    IncidentNumber,
+    Severity,
+    Title,
+    CreatedTime,
+    NotfiedTime=FirstModifiedTime,
+    Status,
+    ClassificationComment,
+    Comment
+| union (SecurityIncident
+    | where Severity !contains "Informational"
+    | summarize arg_max(TimeGenerated, *) by IncidentNumber
+    | where Comments == "[]"
+    | project
+        TimeGenerated,
+        IncidentNumber,
+        Severity,
+        Title,
+        CreatedTime,
+        NotfiedTime=FirstModifiedTime,
+        Status,
+        ClassificationComment,
+        Comment=Comments)
+| extend Raised = iif(Comment contains "https", iif(Comment !contains "Already", "Raised", "Closed"), "Closed")
+| summarize count() by Raised, bin(TimeGenerated, 1d)

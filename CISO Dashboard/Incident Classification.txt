@@ -1,0 +1,9 @@
+SecurityIncident
+| where Severity !contains "Informational"
+| summarize arg_max(TimeGenerated,*) by IncidentNumber
+| extend Comments = parse_json(Comments)
+| mv-expand Comments
+| extend Comment = parse_json(Comments.message)
+| where isnotempty( Classification)
+| summarize count() by Classification
+| render piechart 

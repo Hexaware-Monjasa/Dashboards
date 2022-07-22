@@ -1,0 +1,10 @@
+SecurityIncident
+| where Severity !contains "Informational"
+| summarize arg_max(TimeGenerated, *) by IncidentNumber
+| where Severity contains "High" and Status != "Closed"
+| extend times=  now() - CreatedTime
+| extend time1= toreal(times)
+| extend time2= time1 / 10000000
+| extend time3= toint(time2)
+| extend time4=time3 / 3600
+| project time4, Title, IncidentNumber, TimeGenerated

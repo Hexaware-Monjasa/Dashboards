@@ -1,0 +1,15 @@
+SecurityIncident
+| where LastActivityTime >= ago (7d) and LastModifiedTime <= now()
+| where FirstModifiedTime >= ago(7d) and FirstModifiedTime <= now()
+| where Severity in ('*') or "*" in ('*')
+| extend Tactics = todynamic(AdditionalData.tactics)
+| where Tactics in ('*') or "*" in ('*')
+| extend Owner = todynamic(Owner.assignedTo) 
+| where Owner in ('*') or "*" in ('*')
+| extend Product = todynamic((parse_json(tostring(AdditionalData.alertProductNames))[0])) 
+| where Product in ('*') or "*" in ('*')
+| summarize arg_max(LastModifiedTime,  *) by IncidentNumber 
+| summarize arg_max(TimeGenerated, *) by IncidentNumber 
+| extend TimeToDetect =  (FirstModifiedTime - CreatedTime) / 1h
+| extend TimeToRespond =  (LastModifiedTime- CreatedTime) / 1h
+| summarize MTTD=percentile(TimeToDetect, 50),  MTTR=percentile(TimeToRespond, 50)by bin(CreatedTime, 1d)
