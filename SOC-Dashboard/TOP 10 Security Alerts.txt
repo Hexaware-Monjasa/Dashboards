@@ -1,0 +1,3 @@
+SecurityAlert
+| summarize count() by AlertName
+| top 10 by count_
